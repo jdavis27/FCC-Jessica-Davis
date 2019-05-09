@@ -16,7 +16,7 @@ datafilegdp = os.path.expanduser('/Users/jdavis/Desktop/gdppercap.csv')
 # shape file containing polygons of every country
 shapefile = os.path.expanduser('/Users/jdavis/Downloads/ne_10m_admin_0_countries_lakes (1)')
 
-# water chloropleth will be in shades of blue, gdp chloropleth will be in shades of red 
+# water choropleth will be in shades of blue, gdp chloropleth will be in shades of red 
 cmapwater = 'Blues'
 cmapgdp = 'Reds'
 # sets size of the map
@@ -47,7 +47,7 @@ dfgdp = pd.read_csv(datafilegdp, skiprows=4, usecols=colsgdp, engine='python')
 merged1 = gdf.merge(dfwater, left_on='ADM0_A3', right_on='Country Code') 
 merged2 = gdf.merge(dfgdp, left_on='ADM0_A3', right_on='Country Code')
 
-# create a cholorpleth map of water resources. cmap determines color, figsize determines size, 
+# create a choropleth map of water resources. cmap determines color, figsize determines size, 
 # scheme determines the distribution of countries in each shade, and then we include a legend.
 ax = merged1.dropna().plot(column='2014water', cmap=cmapwater, figsize=figsize, scheme='quantiles', legend=True)
 # for those countries with data unavailable, use the shapefile to fill them in with a black hatch pattern.
@@ -62,7 +62,7 @@ ax.set_axis_off()
 ax.get_legend().set_bbox_to_anchor((.25, .4))
 ax.get_figure()
 
-# create a cholorpleth map of GDP per capita in the same style.
+# create a choropleth map of GDP per capita in the same style.
 ax = merged2.dropna().plot(column='2014gdp', cmap=cmapgdp, figsize=figsize, scheme='quantiles', legend=True)
 # for those countries with data unavailable, use the shapefile to fill them in with a black hatch pattern.
 merged2[merged2.isna().any(axis=1)].plot(ax=ax, color='#000000', hatch='///')
