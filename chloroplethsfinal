@@ -1,0 +1,78 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+@author: jdavis
+"""
+
+# import & nickname tools
+import os
+import pandas as pd
+import geopandas as gpd
+
+# csv file on global renewable internal freshwater resources
+datafilewater = os.path.expanduser('/Users/jdavis/Desktop/waterresources.csv')
+# csv file on global country GDP per capita
+datafilegdp = os.path.expanduser('/Users/jdavis/Desktop/gdppercap.csv')
+# shape file containing polygons of every country
+shapefile = os.path.expanduser('/Users/jdavis/Downloads/ne_10m_admin_0_countries_lakes (1)')
+
+# water chloropleth will be in shades of blue, gdp chloropleth will be in shades of red 
+cmapwater = 'Blues'
+cmapgdp = 'Reds'
+# sets size of the map
+figsize = (16, 10)
+
+# identify columns of the csv files
+colswater = ['Country Name', 'Country Code', '2014water']
+colsgdp = ['Country Name', 'Country Code', '2014gdp']
+
+# titles of each map
+titlewater = ('Renewable internal freshwater resources (billion cubic meters) in 2014')
+titlegdp = ('Country GDP per capita in 2014 (2019 USD)')
+
+# citation
+citation = 'Source: World Bank (2019)'.strip()
+
+# convert shapefile into a geoDataFrame through geopandas. use a Nell projection.
+gdf = gpd.read_file(shapefile)[['ADM0_A3', 'geometry']].to_crs('+proj=nell') 
+
+# convert water csv into a pandas DataFrame. 'skiprows=4' because column names begin on row 5, 
+# and only use the colmuns designated earlier (Country Name, Code, and the data for 2014)
+dfwater = pd.read_csv(datafilewater, skiprows=4, usecols=colswater, engine='python') 
+
+# convert GDP csv into a pandas DataFrame. same process as for the water csv
+dfgdp = pd.read_csv(datafilegdp, skiprows=4, usecols=colsgdp, engine='python')
+
+# merge the geodataframe containing the shapes of all the countries with the dataframes containing their gdp & water resources
+merged1 = gdf.merge(dfwater, left_on='ADM0_A3', right_on='Country Code') 
+merged2 = gdf.merge(dfgdp, left_on='ADM0_A3', right_on='Country Code')
+
+# create a cholorpleth map of water resources. cmap determines color, figsize determines size, 
+# scheme determines the distribution of countries in each shade, and then we include a legend.
+ax = merged1.dropna().plot(column='2014water', cmap=cmapwater, figsize=figsize, scheme='quantiles', legend=True)
+# for those countries with data unavailable, use the shapefile to fill them in with a black hatch pattern.
+merged1[merged1.isna().any(axis=1)].plot(ax=ax, color='#000000', hatch='///')
+       
+# title and citation: set font, size, alignment, location     
+ax.set_title(titlewater, fontname='Times New Roman',fontdict={'fontsize': 20}, loc='center') 
+ax.annotate(citation, fontname='Times New Roman',xy=(0.6, 0.2), size=12, xycoords='figure fraction')
+
+# turn grid & axes off. show and place legend. show figure
+ax.set_axis_off()
+ax.get_legend().set_bbox_to_anchor((.25, .4))
+ax.get_figure()
+
+# create a cholorpleth map of GDP per capita in the same style.
+ax = merged2.dropna().plot(column='2014gdp', cmap=cmapgdp, figsize=figsize, scheme='quantiles', legend=True)
+# for those countries with data unavailable, use the shapefile to fill them in with a black hatch pattern.
+merged2[merged2.isna().any(axis=1)].plot(ax=ax, color='#000000', hatch='///')
+
+ # title and citation: set font, size, alignment, location       
+ax.set_title(titlegdp, fontname='Times New Roman', fontdict={'fontsize': 20}, loc='center') 
+ax.annotate(citation, fontname='Times New Roman', xy=(0.6, 0.2), size=12, xycoords='figure fraction')
+
+# turn grid & axes off. show and place legend. show figure
+ax.set_axis_off()
+ax.get_legend().set_bbox_to_anchor((.25, .4))
+ax.get_figure()
+
